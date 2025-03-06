@@ -6,6 +6,8 @@
 
 # MITRE Caldera&trade;
 
+`🚨Security Notice🚨`: (17 Feb 2025 10:00 EST) Please pull v5.1.0 for a recent security patch for [CVE-2025-27364](https://www.cve.org/CVERecord?id=CVE-2025-27364). Please update your Caldera instance, especially if you host Caldera on a publicly accessible network. [Vulnerability walkthrough.](https://medium.com/@mitrecaldera/mitre-caldera-security-advisory-remote-code-execution-cve-2025-27364-5f679e2e2a0e)
+
 MITRE Caldera&trade; is a cyber security platform designed to easily automate adversary emulation, assist manual red-teams, and automate incident response.
 
 It is built on the [MITRE ATT&CK™ framework](https://attack.mitre.org/) and is an active research project at MITRE.
@@ -18,6 +20,7 @@ an asynchronous command-and-control (C2) server with a REST API and a web interf
 
 ## Resources & Socials
 * 📜 [Documentation, training, and use-cases](https://caldera.readthedocs.io/en/latest/)
+* 🎬 [Tutorial Videos](https://www.youtube.com/playlist?list=PLF2bj1pw7-ZvLTjIwSaTXNLN2D2yx-wXH)
 * ✍️ [Caldera's blog](https://medium.com/@mitrecaldera/welcome-to-the-official-mitre-caldera-blog-page-f34c2cdfef09)
 * 🌐 [Homepage](https://caldera.mitre.org)
 
@@ -88,10 +91,9 @@ Finally, start the server.
 ```Bash
 python3 server.py --insecure --build
 ```
-The `--build` flag automatically installs any VueJS UI dependencies, bundles the UI into a dist directory, writes the Magma plugin's `.env` file, and is served by the Caldera server. You will only have to use the `--build` flag again if you add any plugins or make any changes to the UI.
-Once started, log into http://localhost:8888 using the default credentials red/admin. Then go into Plugins -> Training and complete the capture-the-flag style training course to learn how to use Caldera.
 
-In some situations the default configuration values can cause the UI to appear unresponsive due to misrouted requests. Modify the `app.frontend.api_base_url` config value and start the server using the --build flag to update the UI's request URL environment variable.
+The --build flag automatically installs any VueJS UI dependencies, bundles the UI into a dist directory and is served by the Caldera server. You will only have to use the --build flag again if you add any plugins or make any changes to the UI.
+Once started, log into http://localhost:8888 using the default credentials red/admin. Then go into Plugins -> Training and complete the capture-the-flag style training course to learn how to use Caldera.
 
 If you prefer to not use the new VueJS UI, revert to Caldera v4.2.0. Correspondingly, do not use the `--build` flag for earlier versions as not required.
 
