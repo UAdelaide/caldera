@@ -1,0 +1,44 @@
+- tactic: discovery
+  technique_name: Network Service Scanning
+  technique_id: T1046
+  name: Filter port 8081
+  description: Stores port 8081 as a separate fact if it exists.
+  executors:
+    - name: sh
+      platform: linux
+      command: |
+        if [ #{host.ports} -eq 8081 ]; then
+          echo '8081';
+        fi
+      code: null
+      language: null
+      build_target: null
+      payloads: []
+      uploads: []
+      timeout: 5
+      parsers:
+        - module: plugins.stockpile.app.parsers.basic
+          parserconfigs:
+            - source: host.port.8081
+              edge: ""
+              target: ""
+              custom_parser_vals: {}
+      cleanup: []
+      variations: []
+      additional_info: {}
+  requirements:
+    - module: plugins.stockpile.app.requirements.paw_provenance
+      relationship_match:
+        - source: host.ports
+          edge:
+          target:
+  privilege: ""
+  repeatable: false
+  buckets:
+    - discovery
+  additional_info: {}
+  access: {}
+  singleton: true
+  plugin: ""
+  delete_payload: true
+  id: filter-port-8081

@@ -1,0 +1,40 @@
+- tactic: discovery
+  technique_name: System Owner/User Discovery
+  technique_id: T1033
+  name: Test - Identify Active User
+  description: Modified version of identify active user
+  executors:
+    - name: sh
+      platform: linux
+      command: whoami
+      code: null
+      language: null
+      build_target: null
+      payloads: []
+      uploads: []
+      timeout: 5
+      parsers:
+        - module: plugins.stockpile.app.parsers.basic
+          parserconfigs:
+            - source: host.user.name
+              edge: ""
+              target: ""
+              custom_parser_vals: {}
+            - source: domain.user.name
+              edge: ""
+              target: ""
+              custom_parser_vals: {}
+      cleanup: []
+      variations: []
+      additional_info: {}
+  requirements: []
+  privilege: ""
+  repeatable: false
+  buckets:
+    - discovery
+  additional_info: {}
+  access: {}
+  singleton: false
+  plugin: ""
+  delete_payload: true
+  id: user-discovery

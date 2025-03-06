@@ -1,0 +1,33 @@
+- tactic: discovery
+  technique_name: Process Discovery
+  technique_id: T1057
+  name: Test - Find user processes
+  description: Get process info for processes running as a user
+  executors:
+    - name: sh
+      platform: linux
+      command: "ps aux | grep #{host.user.name}"
+      code: null
+      language: null
+      build_target: null
+      payloads: []
+      uploads: []
+      timeout: 5
+      parsers: []
+      cleanup: []
+      variations: []
+      additional_info: {}
+  requirements:
+    - module: plugins.stockpile.app.requirements.paw_provenance
+      relationship_match:
+        - source: host.user.name
+  privilege: ""
+  repeatable: false
+  buckets:
+    - discovery
+  additional_info: {}
+  access: {}
+  singleton: false
+  plugin: ""
+  delete_payload: true
+  id: process-discovery

@@ -1,0 +1,36 @@
+- tactic: discovery
+  technique_name: "Account Discovery: Local Account"
+  technique_id: T1087.001
+  name: Test - Find local users
+  description: Get a list of all local users
+  executors:
+    - name: sh
+      platform: linux
+      command: "cut -d: -f1 /etc/passwd | grep -v '_' | grep -v '#'"
+      code: null
+      language: null
+      build_target: null
+      payloads: []
+      uploads: []
+      timeout: 5
+      parsers:
+        - module: plugins.stockpile.app.parsers.basic
+          parserconfigs:
+            - source: host.user.name
+              edge: ""
+              target: ""
+              custom_parser_vals: {}
+      cleanup: []
+      variations: []
+      additional_info: {}
+  requirements: []
+  privilege: ""
+  repeatable: false
+  buckets:
+    - discovery
+  additional_info: {}
+  access: {}
+  singleton: false
+  plugin: ""
+  delete_payload: true
+  id: account-discovery

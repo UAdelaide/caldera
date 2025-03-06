@@ -1,0 +1,13 @@
+name: NGINX Adversary
+description: Able to perform nmap scan, identify different nginx vulnerabilities,
+  and exploit them.
+atomic_ordering:
+- nmap-scan
+- filter-port-8080
+- filter-port-8081
+- filter-port-8082
+- crlf-injection
+- directory-traversal
+- xss
+adversary_id: nginx-adversary
+objective: 495a9828-cab1-44dd-a0ca-66e58177d8cc
