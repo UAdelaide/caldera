@@ -1,0 +1,4 @@
+name: Websocket Reporter
+description: Provides a websocket for real-time operation reporting and control.
+address: ws://0.0.0.0:8889 
+enabled: true
