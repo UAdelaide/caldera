@@ -118,14 +118,10 @@ async def stop_caldera_operation(operation_id):
 # Plugin initialization
 async def enable(services):
     app_svc = services.get("app_svc")
-    hook_svc = services.get("hook_svc")
     app = app_svc.application
 
     app.router.add_route("GET", address, handle_websocket)
     logging.info(f"Websocket reporter endpoint enabled at {address}")
-
-    await hook_svc.add_hook("HOOK_REPORT_ITEM", operation_finish_hook)
-    logging.info("Registered hook for operation updates.")
 
 
 async def disable(services):
