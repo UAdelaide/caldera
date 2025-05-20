@@ -702,7 +702,7 @@ async def create_caldera_operation(
         return None
 
 
-async def enable(services):
+async def enable(services: dict):
     """Enable the websocket reporter plugin.
 
     Parameters

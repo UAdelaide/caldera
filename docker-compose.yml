@@ -1,13 +1,22 @@
 version: "3"
 
 services:
+  agent:
+    image: attacker
+    container_name: attacker
+    build:
+      context: ../CyberLab/containers/caldera_agent/
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ../CyberLab/containers/caldera_agent/.env
+    network_mode: host
   caldera:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        TZ: "UTC" #TZ sets timezone for ubuntu setup
-        WIN_BUILD: "true" #WIN_BUILD is used to enable windows build in sandcat plugin
+        TZ: "UTC" 
+        WIN_BUILD: "true"
     environment:
       PUID: 1000
       PGID: 1000

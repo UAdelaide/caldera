@@ -1,0 +1,354 @@
+Attaching to caldera-1
+caldera-1  | 2025-05-14 06:23:47 INFO     Using main config from conf/local.yml server.py:228
+caldera-1  | 2025-05-14 06:23:48 DEBUG    Loaded 2 parsers                 learning_svc.py:20
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              7db784562afbea0265fcafc4243b66de                   
+caldera-1  |                              and                                                
+caldera-1  |                              5ac7f6ec1898d8d408f9cdc687262cc7                   
+caldera-1  |                              (Exfiltration Over Alternative                     
+caldera-1  |                              Protocol - SSH). Modifying name of                 
+caldera-1  |                              the second ability to Exfiltration                 
+caldera-1  |                              Over Alternative Protocol - SSH                    
+caldera-1  |                              (2)...                                             
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              52928f462ea8f5fa617aa8c815f5598b                   
+caldera-1  |                              and                                                
+caldera-1  |                              5e3512c73a461c17ddcb1cc0bbdbeef9                   
+caldera-1  |                              (WinPwn - PowerSharpPack -                         
+caldera-1  |                              Kerberoasting Using Rubeus).                       
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to WinPwn - PowerSharpPack                 
+caldera-1  |                              - Kerberoasting Using Rubeus                       
+caldera-1  |                              (2)...                                             
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              f674301b84ea3344f119270bf7bb97cd                   
+caldera-1  |                              and                                                
+caldera-1  |                              4d4b29abb6b1e580e33c0035c1fc37ad                   
+caldera-1  |                              (rm -rf). Modifying name of the                    
+caldera-1  |                              second ability to rm -rf (2)...                    
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              9bd1997d793d0ac5b1aea4888c75c932                   
+caldera-1  |                              and                                                
+caldera-1  |                              3bfd3a51f3c7352d7c6c6c785d01e5f7                   
+caldera-1  |                              (Loadable Kernel Module based                      
+caldera-1  |                              Rootkit). Modifying name of the                    
+caldera-1  |                              second ability to Loadable Kernel                  
+caldera-1  |                              Module based Rootkit (2)...                        
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              b73d58b20bcb138a26175f240cca9de2                   
+caldera-1  |                              and                                                
+caldera-1  |                              dca8b042fcdffcc1f5cddcff4122c434                   
+caldera-1  |                              (System Information Discovery).                    
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to System Information                      
+caldera-1  |                              Discovery (2)...                                   
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              c84a57391dbc724dc51436deb3e0ca00                   
+caldera-1  |                              and                                                
+caldera-1  |                              e0c75b4cc32124ef4c61508694fd0808                   
+caldera-1  |                              (Get-DomainUser with PowerView).                   
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to Get-DomainUser with                     
+caldera-1  |                              PowerView (2)...                                   
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              44705da4b28c8fa57fc2a2940b34565a                   
+caldera-1  |                              and                                                
+caldera-1  |                              dca8b042fcdffcc1f5cddcff4122c434                   
+caldera-1  |                              (System Information Discovery).                    
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to System Information                      
+caldera-1  |                              Discovery (2)...                                   
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              68a0a328719faa26fff5b92e18108b3f                   
+caldera-1  |                              and                                                
+caldera-1  |                              26d3702887944abcc64b406baf8f8e43                   
+caldera-1  |                              (Enumerate users and groups).                      
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to Enumerate users and                     
+caldera-1  |                              groups (2)...                                      
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              942316dc6a362e44b248a872e5f42c92                   
+caldera-1  |                              and                                                
+caldera-1  |                              4370001012f5f0df001269627b4737e9                   
+caldera-1  |                              (System Owner/User Discovery).                     
+caldera-1  |                              Modifying name of the second                       
+caldera-1  |                              ability to System Owner/User                       
+caldera-1  |                              Discovery (2)...                                   
+caldera-1  | 2025-05-14 06:23:49 DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              ab44803d5a9c299258efff185b0f70b5                   
+caldera-1  |                              and                                                
+caldera-1  |                              9bd17863cd45f82002a6f011de139363                   
+caldera-1  |                              (rc.common). Modifying name of the                 
+caldera-1  |                              second ability to rc.common (2)...                 
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              fcf71ee3-d1a9-4136-b919-9e5f6da436                 
+caldera-1  |                              08 and                                             
+caldera-1  |                              3838447b079b302fe75b700a70163815                   
+caldera-1  |                              (Clear Logs). Modifying name of                    
+caldera-1  |                              the second ability to Clear Logs                   
+caldera-1  |                              (2)...                                             
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              b1d41972-3ad9-4aa1-8f7f-05f049a298                 
+caldera-1  |                              0e and                                             
+caldera-1  |                              10a9d979-e342-418a-a9b0-002c483e0f                 
+caldera-1  |                              a6 (Start 54ndc47). Modifying name                 
+caldera-1  |                              of the second ability to Start                     
+caldera-1  |                              54ndc47 (2)...                                     
+caldera-1  |                     DEBUG    Collision in ability name detected c_ability.py:103
+caldera-1  |                              for                                                
+caldera-1  |                              2488245e-bcbd-405d-920e-2de27db882                 
+caldera-1  |                              b3 and                                             
+caldera-1  |                              1d3cb1429f530cb89f41c65e57f03db4                   
+caldera-1  |                              (Query Registry). Modifying name                   
+caldera-1  |                              of the second ability to Query                     
+caldera-1  |                              Registry (2)...                                    
+caldera-1  |                     DEBUG    Restored data from persistent       data_svc.py:116
+caldera-1  |                              storage                                            
+caldera-1  |                     DEBUG    There are 0 jobs in the scheduler   data_svc.py:117
+caldera-1  |                     DEBUG    Restored data from        base_knowledge_svc.py:308
+caldera-1  |                              persistent storage                                 
+caldera-1  |                     DEBUG    Registered contact: html          contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: slack         contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: dns           contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: tcp           contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: ftp           contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: http          contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: gist          contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: websocket     contact_svc.py:38
+caldera-1  |                     DEBUG    Registered contact: udp           contact_svc.py:38
+caldera-1  |                     WARNING  /opt/venv/caldera/lib/python3.12/si warnings.py:110
+caldera-1  |                              te-packages/asyncssh/crypto/cipher.                
+caldera-1  |                              py:29:                                             
+caldera-1  |                              CryptographyDeprecationWarning:                    
+caldera-1  |                              ARC4 has been moved to                             
+caldera-1  |                              cryptography.hazmat.decrepit.cipher                
+caldera-1  |                              s.algorithms.ARC4 and will be                      
+caldera-1  |                              removed from                                       
+caldera-1  |                              cryptography.hazmat.primitives.ciph                
+caldera-1  |                              ers.algorithms in 48.0.0.                          
+caldera-1  |                                from                                             
+caldera-1  |                              cryptography.hazmat.primitives.ciph                
+caldera-1  |                              ers.algorithms import AES, ARC4                    
+caldera-1  |                                                                                 
+caldera-1  |                     WARNING  /opt/venv/caldera/lib/python3.12/si warnings.py:110
+caldera-1  |                              te-packages/asyncssh/crypto/cipher.                
+caldera-1  |                              py:30:                                             
+caldera-1  |                              CryptographyDeprecationWarning:                    
+caldera-1  |                              TripleDES has been moved to                        
+caldera-1  |                              cryptography.hazmat.decrepit.cipher                
+caldera-1  |                              s.algorithms.TripleDES and will be                 
+caldera-1  |                              removed from                                       
+caldera-1  |                              cryptography.hazmat.primitives.ciph                
+caldera-1  |                              ers.algorithms in 48.0.0.                          
+caldera-1  |                                from                                             
+caldera-1  |                              cryptography.hazmat.primitives.ciph                
+caldera-1  |                              ers.algorithms import TripleDES                    
+caldera-1  |                                                                                 
+caldera-1  |                     DEBUG    Registered contact tunnel:        contact_svc.py:53
+caldera-1  |                              ssh_tunneling                                      
+caldera-1  |                     INFO     Invalid Github Gist personal API contact_gist.py:70
+caldera-1  |                              token provided. Gist C2 contact                    
+caldera-1  |                              will not be started.                               
+caldera-1  |                     INFO     Generating temporary SSH private   tunnel_ssh.py:26
+caldera-1  |                              key. Was unable to use provided                    
+caldera-1  |                              SSH private key                                    
+caldera-1  |                     ERROR    Error importing                      c_plugin.py:91
+caldera-1  |                              plugin=websocket_reporter, No module               
+caldera-1  |                              named 'pydantic'                                   
+caldera-1  |                     ERROR    Error loading                        c_plugin.py:59
+caldera-1  |                              plugin=websocket_reporter,                         
+caldera-1  |                              'NoneType' object has no attribute                 
+caldera-1  |                              'description'                                      
+caldera-1  |                     ERROR    Error importing                      c_plugin.py:91
+caldera-1  |                              plugin=websocket_reporter, No module               
+caldera-1  |                              named 'pydantic'                                   
+caldera-1  |                     ERROR    Error enabling                       c_plugin.py:70
+caldera-1  |                              plugin=websocket_reporter,                         
+caldera-1  |                              'NoneType' object has no attribute                 
+caldera-1  |                              'enable'                                           
+caldera-1  |                     INFO     Enabled plugin: websocket_reporter   app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: manx                 app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: atomic               app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: magma                app_svc.py:131
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              shared                                             
+caldera-1  |                     DEBUG    Loaded gocat extension module: donut sand_svc.py:94
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              shellcode                                          
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              native                                             
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              shells                                             
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              proxy_http                                         
+caldera-1  |                     DEBUG    Loaded gocat extension module: slack sand_svc.py:94
+caldera-1  |                     DEBUG    Loaded gocat extension module:       sand_svc.py:94
+caldera-1  |                              dns_tunneling                                      
+caldera-1  |                     INFO     Enabled plugin: sandcat              app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: compass              app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: fieldmanual          app_svc.py:131
+caldera-1  |                     ERROR    Error importing plugin=builder, No   c_plugin.py:91
+caldera-1  |                              module named 'docker'                              
+caldera-1  |                     ERROR    Error loading plugin=builder,        c_plugin.py:59
+caldera-1  |                              'NoneType' object has no attribute                 
+caldera-1  |                              'description'                                      
+caldera-1  |                     INFO     Enabled plugin: debrief              app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: training             app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: bountyhunter         app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: access               app_svc.py:131
+caldera-1  |                     DEBUG    Configuration (agents) update,     base_world.py:46
+caldera-1  |                              setting                                            
+caldera-1  |                              deployments=['2f34977d-9558-4c12-a                 
+caldera-1  |                              bad-349716777c6b',                                 
+caldera-1  |                              '356d1722-7784-40c4-822b-0cf864b0b                 
+caldera-1  |                              36d',                                              
+caldera-1  |                              '1837b43e-4fff-46b2-a604-a602f7540                 
+caldera-1  |                              469',                                              
+caldera-1  |                              '0ab383be-b819-41bf-91b9-1bd4404d8                 
+caldera-1  |                              3bf']                                              
+caldera-1  |                     INFO     Enabled plugin: response             app_svc.py:131
+caldera-1  |                     INFO     Enabled plugin: stockpile            app_svc.py:131
+caldera-1  |                     INFO     Creating SSH listener on 0.0.0.0,     logging.py:92
+caldera-1  |                              port 8022                                          
+caldera-1  |                     INFO     serving on 0.0.0.0:2222               server.py:741
+caldera-1  |                     WARNING  Unable to properly load .donut for  data_svc.py:436
+caldera-1  |                              payload                                            
+caldera-1  |                              plugins.stockpile.app.donut.donut_h                
+caldera-1  |                              andler due to failed import                        
+caldera-1  |                     WARNING  upx does not meet the minimum        app_svc.py:186
+caldera-1  |                              version of 0.0.0. Upx is an optional               
+caldera-1  |                              dependency which adds more                         
+caldera-1  |                              functionality.                                     
+caldera-1  | 2025-05-14 06:23:56 WARNING  Payload referenced in               data_svc.py:469
+caldera-1  |                              0220b3e7-9ba0-4529-abb4-52a70dc49b5                
+caldera-1  |                              0 but not found: bypassUAC.ps1                     
+caldera-1  |                     WARNING  Payload referenced in               data_svc.py:469
+caldera-1  |                              0220b3e7-9ba0-4529-abb4-52a70dc49b5                
+caldera-1  |                              0 but not found: bypassUAC.ps1                     
+caldera-1  |                     WARNING  Payload referenced in               data_svc.py:469
+caldera-1  |                              a440211a-d2cc-4f89-a02d-a39061a0e69                
+caldera-1  |                              7 but not found: credDump.ps1                      
+caldera-1  |                     WARNING  Payload referenced in               data_svc.py:469
+caldera-1  |                              a440211a-d2cc-4f89-a02d-a39061a0e69                
+caldera-1  |                              7 but not found: credDump.ps1                      
+caldera-1  | 2025-05-14 06:24:02 WARNING  Ability referenced in adversary   c_adversary.py:90
+caldera-1  |                              ef4d997c-a0d1-4067-9efa-87c58682d                  
+caldera-1  |                              b71 but not found:                                 
+caldera-1  |                              2f32a5c66db68b291469a3ab49be9261                   
+caldera-1  |                     WARNING  Ability referenced in adversary   c_adversary.py:90
+caldera-1  |                              ef4d997c-a0d1-4067-9efa-87c58682d                  
+caldera-1  |                              b71 but not found:                                 
+caldera-1  |                              854e480af3b5e2946bb3ae44916e951a                   
+caldera-1  |                     WARNING  Ability referenced in adversary   c_adversary.py:90
+caldera-1  |                              ef4d997c-a0d1-4067-9efa-87c58682d                  
+caldera-1  |                              b71 but not found:                                 
+caldera-1  |                              6401e9fc7007569199a38703f0aa0f0f                   
+caldera-1  | 2025-05-14 06:24:03 WARNING  Unable to build docs:                    hook.py:60
+caldera-1  |                                                                                 
+caldera-1  |                              Configuration error:                               
+caldera-1  |                              There is a programmable error in your              
+caldera-1  |                              configuration file:                                
+caldera-1  |                                                                                 
+caldera-1  |                              Traceback (most recent call last):                 
+caldera-1  |                                File                                             
+caldera-1  |                              "/opt/venv/caldera/lib/python3.12/site-p           
+caldera-1  |                              ackages/sphinx/config.py", line 356, in            
+caldera-1  |                              eval_config_file                                   
+caldera-1  |                                  exec(code, namespace)  # NoQA: S102            
+caldera-1  |                                  ^^^^^^^^^^^^^^^^^^^^^                          
+caldera-1  |                                File                                             
+caldera-1  |                              "/usr/src/app/plugins/fieldmanual/sphinx           
+caldera-1  |                              -docs/conf.py", line 10, in <module>               
+caldera-1  |                                  from                                           
+caldera-1  |                              plugins.fieldmanual.utils.plugin_docs              
+caldera-1  |                              import import_plugin_docs                          
+caldera-1  |                                File                                             
+caldera-1  |                              "/usr/src/app/plugins/fieldmanual/sphinx           
+caldera-1  |                              -docs/../../../plugins/fieldmanual/utils           
+caldera-1  |                              /plugin_docs.py", line 3, in <module>              
+caldera-1  |                                  from distutils.dir_util import                 
+caldera-1  |                              copy_tree                                          
+caldera-1  |                              ModuleNotFoundError: No module named               
+caldera-1  |                              'distutils'                                        
+caldera-1  |                                                                                 
+caldera-1  |                                                                                 
+caldera-1  |                     DEBUG    Using default login handler.        auth_svc.py:209
+caldera-1  |                     DEBUG    Created authentication group: blue   auth_svc.py:72
+caldera-1  |                     DEBUG    Created authentication group: red    auth_svc.py:72
+caldera-1  |                     DEBUG    = connection is CONNECTING          protocol.py:175
+caldera-1  |                     DEBUG    > GET /system/ready HTTP/1.1          client.py:292
+caldera-1  |                     DEBUG    > Host: 0.0.0.0:7012                  client.py:294
+caldera-1  |                     DEBUG    > Upgrade: websocket                  client.py:294
+caldera-1  |                     DEBUG    > Connection: Upgrade                 client.py:294
+caldera-1  |                     DEBUG    > Sec-WebSocket-Key:                  client.py:294
+caldera-1  |                              saPCY8HKwas7uLnCtpzorw==                           
+caldera-1  |                     DEBUG    > Sec-WebSocket-Version: 13           client.py:294
+caldera-1  |                     DEBUG    > Sec-WebSocket-Extensions:           client.py:294
+caldera-1  |                              permessage-deflate;                                
+caldera-1  |                              client_max_window_bits                             
+caldera-1  |                     DEBUG    > User-Agent: Python/3.12             client.py:294
+caldera-1  |                              websockets/15.0                                    
+caldera-1  |                     DEBUG    < HTTP/1.1 101 Switching Protocols    client.py:318
+caldera-1  |                     DEBUG    < Date: Wed, 14 May 2025 06:24:03 GMT client.py:320
+caldera-1  |                     DEBUG    < Upgrade: websocket                  client.py:320
+caldera-1  |                     DEBUG    < Connection: Upgrade                 client.py:320
+caldera-1  |                     DEBUG    < Sec-WebSocket-Accept:               client.py:320
+caldera-1  |                              iD1NwIxpFlpBb0AQrgs/qFrIeWw=                       
+caldera-1  |                     DEBUG    < Sec-WebSocket-Extensions:           client.py:320
+caldera-1  |                              permessage-deflate;                                
+caldera-1  |                              server_max_window_bits=12;                         
+caldera-1  |                              client_max_window_bits=12                          
+caldera-1  |                     DEBUG    < Server: Python/3.12 websockets/15.0 client.py:320
+caldera-1  |                     DEBUG    = connection is OPEN                protocol.py:175
+caldera-1  |                     DEBUG    < CLOSE 1000 (OK) [2 bytes]         protocol.py:599
+caldera-1  |                     DEBUG    > CLOSE 1000 (OK) [2 bytes]         protocol.py:745
+caldera-1  |                     DEBUG    = connection is CLOSING             protocol.py:175
+caldera-1  |                     DEBUG    < EOF                               protocol.py:649
+caldera-1  |                     DEBUG    > EOF                               protocol.py:757
+caldera-1  |                     DEBUG    = connection is CLOSED              protocol.py:175
+caldera-1  |                     DEBUG    x half-closing TCP connection     connection.py:974
+caldera-1  |                     INFO     All systems ready.                    server.py:104
+caldera-1  | 
+caldera-1  |  ██████╗ █████╗ ██╗     ██████╗ ███████╗██████╗  █████╗
+caldera-1  | ██╔════╝██╔══██╗██║     ██╔══██╗██╔════╝██╔══██╗██╔══██╗
+caldera-1  | ██║     ███████║██║     ██║  ██║█████╗  ██████╔╝███████║
+caldera-1  | ██║     ██╔══██║██║     ██║  ██║██╔══╝  ██╔══██╗██╔══██║
+caldera-1  | ╚██████╗██║  ██║███████╗██████╔╝███████╗██║  ██║██║  ██║
+caldera-1  |  ╚═════╝╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
+caldera-1  | 
+caldera-1  | 2025-05-14 06:24:08 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:09 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:11 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:12 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:13 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:14 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:16 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:17 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:19 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:21 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:23 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:25 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:26 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:27 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:29 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:30 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:31 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:33 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:34 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:35 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:36 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:38 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:40 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
+caldera-1  | 2025-05-14 06:24:42 DEBUG    Incoming html beacon from tuviko  contact_svc.py:65
