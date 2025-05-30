@@ -1,9 +1,9 @@
 import asyncio
+from collections import defaultdict
 from datetime import date, datetime
 import json
 import logging
 import re
-from collections import defaultdict
 
 import aiohttp
 from aiohttp import web
@@ -15,12 +15,37 @@ from app.service.interfaces.i_app_svc import (
 )
 from pydantic import BaseModel, Field, validator, ValidationError
 
+
+# Response Status Codes
+OP_CREATED = "operation_created"
+OP_STARTED = "operation_started"
+OP_UPDATED = "operation_updated"
+OP_STOPPED = "operation_stopped"
+OP_SUBSCRIBED = "operation_subscribed"
+OP_UNSUBSCRIBED = "operation_unsubscribed"
+OP_LINK_PENDING = "operation_link_pending"
+OP_LINK_APPROVED = "operation_link_approved"
+OP_LINK_DISCARDED = "operation_link_discarded"
+ERROR = "error"
+
 POLLING_INTERVAL_SECONDS = 5
 LINK_EXECUTE_STATUS = -3
 LINK_PAUSE_STATUS = -1
 LINK_DISCARD_STATUS = -2
 LINK_SUCCESS_STATUS = 0
 LINK_FAIL_STATUS = 1
+LOG_PREFIX = "[WS PLUGIN]"
+
+name = "WebsocketReporter"
+description = "Provides a websocket for operation control and subscribable polled updates with link approval."
+address = "/plugin/websocket_reporter/ws"
+plugin_services: dict[str, any] = {}
+connections = set()
+# operation_id -> set of (websocket, request_id) tuples
+subscriptions = defaultdict(set)
+polled_operation_ids = set()
+last_operation_states: dict[str, tuple] = {}
+polling_task: asyncio.Task | None = None
 
 
 class CreateOperationData(BaseModel):
@@ -80,17 +105,32 @@ class CreateOperationData(BaseModel):
         return v
 
 
-name = "WebsocketReporter"
-description = "Provides a websocket for operation control and subscribable polled updates with link approval."
-address = "/plugin/websocket_reporter/ws"
+# TODO: needs to be used to standardize link approval requests
+class ApprovalRequest(BaseModel):
+    operation_id: str = Field(..., description="ID of the operation")
+    link_id: str = Field(..., description="ID of the link awaiting approval")
+    decision: str = Field(
+        ..., description="Decision on the link ('approve' or 'discard')"
+    )
 
-plugin_services: dict[str, any] = {}
+    @validator("decision")
+    def check_decision_value(cls, v):
+        if v not in ["approve", "discard"]:
+            raise ValueError("Decision must be either 'approve' or 'discard'")
+        return v
 
-connections = set()
-subscriptions = defaultdict(set)
-polled_operation_ids = set()
-last_operation_states: dict[str, tuple] = {}
-polling_task: asyncio.Task | None = None
+
+class Response(BaseModel):
+    status: str = Field(..., description="Status of the operation")
+    data: dict | None = Field(
+        None, description="Data related to the operation (if applicable)"
+    )
+    request_id: str | None = Field(
+        None, description="Request ID for tracking (if applicable)"
+    )
+    message: str | None = Field(
+        None, description="Optional message for additional info"
+    )
 
 
 def json_serializable_converter(obj):
@@ -105,21 +145,25 @@ def json_serializable_converter(obj):
         str: A string representation of the object or a default value.
     """
 
+    if isinstance(obj, Response):
+        return obj.model_dump()
+
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
+
     try:
         if hasattr(obj, "display") and callable(obj.display):
             return obj.display
         return str(obj)
     except Exception:
-        return f"<unserializable type: {type(obj).__name__}>"
+        return f"{LOG_PREFIX} <unserializable type: {type(obj).__name__}>"
 
 
 async def poll_operations():
     """Periodically polls subscribed operations for changes and sends updates."""
 
     log = logging.getLogger("ws_reporter_poller")
-    log.info("Operation polling task started.")
+    log.info(f"{LOG_PREFIX}  Operation polling task started.")
 
     while True:
         await asyncio.sleep(POLLING_INTERVAL_SECONDS)
@@ -129,22 +173,24 @@ async def poll_operations():
 
         if not data_svc or not app_svc or not polled_operation_ids:
             if not polled_operation_ids:
-                log.debug("Polling skipped: No operations being polled.")
+                log.debug(f"{LOG_PREFIX} Polling skipped: No operations being polled.")
             elif not data_svc or not app_svc:
                 log.error(
-                    "Polling skipped: Required services (data_svc, app_svc) not available."
+                    f"{LOG_PREFIX} Polling skipped: Required services (data_svc, app_svc) not available."
                 )
             continue
 
         current_polled_ids = list(polled_operation_ids)
-        log.debug(f"Polling {len(current_polled_ids)} operations: {current_polled_ids}")
+        log.debug(
+            f"{LOG_PREFIX} Polling {len(current_polled_ids)} operations: {current_polled_ids}"
+        )
 
         for op_id in current_polled_ids:
             try:
                 ops = await data_svc.locate("operations", match=dict(id=op_id))
                 if not ops:
                     log.warning(
-                        f"Operation {op_id} not found during polling. Removing."
+                        f"{LOG_PREFIX} Operation {op_id} not found during polling. Removing."
                     )
                     polled_operation_ids.discard(op_id)
                     last_operation_states.pop(op_id, None)
@@ -172,30 +218,46 @@ async def poll_operations():
 
                 if current_state_snapshot != last_state_snapshot:
                     log.info(
-                        f"[Poll Op {op_id}] Detected change. Old state: {last_state_snapshot}, New state: {current_state_snapshot}"
+                        f"{LOG_PREFIX} [Poll Op {op_id}] Detected change. Old state: {last_state_snapshot}, New state: {current_state_snapshot}"
                     )
                     last_operation_states[op_id] = current_state_snapshot
 
                     subscribers = list(subscriptions.get(op_id, set()))
                     if not subscribers:
                         log.debug(
-                            f"[Poll Op {op_id}] No active subscribers for changed operation."
+                            f"{LOG_PREFIX} [Poll Op {op_id}] No active subscribers for changed operation."
                         )
                         continue
 
-                    update_payload = {
-                        "type": "operation_polled_update",
-                        "operation_id": op_id,
-                        "data": operation.display,
-                    }
+                    update_payload = Response(
+                        status=OP_UPDATED,
+                        data=operation.display,
+                    )
                     try:
-                        op_update_message = json.dumps(
-                            update_payload, default=json_serializable_converter
-                        )
                         log.debug(
-                            f"[Poll Op {op_id}] Sending general update to {len(subscribers)} subscribers."
+                            f"{LOG_PREFIX} [Poll Op {op_id}] Sending general update to {len(subscribers)} subscribers."
                         )
-                        tasks = [ws.send_str(op_update_message) for ws in subscribers]
+                        tasks = []
+
+                        for ws, req_id in subscribers:
+                            if ws.closed:
+                                log.warning(
+                                    f"{LOG_PREFIX} [Poll Op {op_id}] Skipping closed websocket for subscriber {req_id}."
+                                )
+                                continue
+                            try:
+                                update_payload.request_id = req_id
+                                op_update_message = json.dumps(
+                                    update_payload,
+                                    default=json_serializable_converter,
+                                )
+                                tasks.append(ws.send_str(op_update_message))
+                            except Exception as send_err:
+                                log.error(
+                                    f"{LOG_PREFIX} [Poll Op {op_id}] Failed to send update to subscriber {req_id}: {send_err}",
+                                    exc_info=True,
+                                )
+
                         results = await asyncio.gather(*tasks, return_exceptions=True)
                         current_subscribers = []
                         for i, result in enumerate(results):
@@ -205,7 +267,7 @@ async def poll_operations():
                                     "remote", "unknown"
                                 )
                                 log.error(
-                                    f"[Poll Op {op_id}] Failed to send polled update to {remote_addr}: {result}"
+                                    f"{LOG_PREFIX} [Poll Op {op_id}] Failed to send polled update to {remote_addr}: {result}"
                                 )
                                 connections.discard(failed_ws)
                                 if op_id in subscriptions:
@@ -213,7 +275,7 @@ async def poll_operations():
                                     if not subscriptions[op_id]:
                                         del subscriptions[op_id]
                                         log.info(
-                                            f"[Poll Op {op_id}] Removing from polling - no subscribers left after send failure."
+                                            f"{LOG_PREFIX} [Poll Op {op_id}] Removing from polling - no subscribers left after send failure."
                                         )
                                         polled_operation_ids.discard(op_id)
                                         last_operation_states.pop(op_id, None)
@@ -225,7 +287,7 @@ async def poll_operations():
 
                     except Exception as json_err:
                         log.error(
-                            f"[Poll Op {op_id}] Failed to serialize general polled update: {json_err}",
+                            f"{LOG_PREFIX} [Poll Op {op_id}] Failed to serialize general polled update: {json_err}",
                             exc_info=True,
                         )
 
@@ -239,7 +301,7 @@ async def poll_operations():
 
                         if new_link_ids:
                             log.info(
-                                f"[Poll Op {op_id}] Detected {len(new_link_ids)} new link(s): {new_link_ids}"
+                                f"{LOG_PREFIX} [Poll Op {op_id}] Detected {len(new_link_ids)} new link(s): {new_link_ids}"
                             )
                             approval_tasks = []
                             for link_id in new_link_ids:
@@ -254,7 +316,7 @@ async def poll_operations():
 
                                 if new_link:
                                     log.debug(
-                                        f"[Poll Op {op_id}] Checking new link {link_id}. Status: {new_link.status}, Op Autonomous: {operation.autonomous}"
+                                        f"{LOG_PREFIX} [Poll Op {op_id}] Checking new link {link_id}. Status: {new_link.status}, Op Autonomous: {operation.autonomous}"
                                     )
 
                                     needs_approval_request = False
@@ -263,47 +325,54 @@ async def poll_operations():
                                     if not operation.autonomous:
                                         if new_link.status == LINK_PAUSE_STATUS:
                                             log.info(
-                                                f"[Poll Op {op_id}] New link {link_id} is already PAUSED ({LINK_PAUSE_STATUS}). Flagging for approval."
+                                                f"{LOG_PREFIX} [Poll Op {op_id}] New link {link_id} is already PAUSED ({LINK_PAUSE_STATUS}). Flagging for approval."
                                             )
                                             needs_approval_request = True
                                         else:
                                             log.debug(
-                                                f"[Poll Op {op_id}] New link {link_id} has status {new_link.status}. Not requesting approval."
+                                                f"{LOG_PREFIX} [Poll Op {op_id}] New link {link_id} has status {new_link.status}. Not requesting approval."
                                             )
                                     else:
                                         log.debug(
-                                            f"[Poll Op {op_id}] Link {link_id} skipped for approval check (operation is autonomous)."
+                                            f"{LOG_PREFIX} [Poll Op {op_id}] Link {link_id} skipped for approval check (operation is autonomous)."
                                         )
 
                                     if needs_approval_request:
                                         log.info(
-                                            f"[Poll Op {op_id}] Preparing approval request for link {link_id} (Status: {link_status_for_approval})."
+                                            f"{LOG_PREFIX} [Poll Op {op_id}] Preparing approval request for link {link_id} (Status: {link_status_for_approval})."
                                         )
-                                        approval_payload = {
-                                            "type": "link_awaiting_approval",
-                                            "operation_id": op_id,
-                                            "link": new_link.display,
-                                        }
+
+                                        approval_payload = Response(
+                                            status=OP_LINK_PENDING,
+                                            data=new_link.display,
+                                        )
                                         try:
-                                            approval_message = json.dumps(
-                                                approval_payload,
-                                                default=json_serializable_converter,
-                                            )
-                                            for ws in subscribers:
+                                            for ws, req_id in subscribers:
+                                                if ws.closed:
+                                                    log.warning(
+                                                        f"{LOG_PREFIX} [Poll Op {op_id}] Skipping closed websocket for subscriber {req_id}."
+                                                    )
+                                                    continue
+                                                approval_payload.request_id = req_id
+                                                approval_message = json.dumps(
+                                                    approval_payload,
+                                                    default=json_serializable_converter,
+                                                )
                                                 approval_tasks.append(
                                                     ws.send_str(approval_message)
                                                 )
                                         except Exception as json_err:
                                             log.error(
-                                                f"[Poll Op {op_id}] Failed to serialize approval request for link {link_id}: {json_err}",
+                                                f"{LOG_PREFIX} [Poll Op {op_id}] Failed to serialize approval request for link {link_id}: {json_err}",
                                                 exc_info=True,
                                             )
                             if approval_tasks:
                                 log.debug(
-                                    f"[Poll Op {op_id}] Sending {len(approval_tasks)} approval requests to relevant subscribers."
+                                    f"{LOG_PREFIX} [Poll Op {op_id}] Sending {len(approval_tasks)} approval requests to relevant subscribers."
                                 )
                                 approval_results = await asyncio.gather(
-                                    *approval_tasks, return_exceptions=True
+                                    *approval_tasks,
+                                    return_exceptions=True,
                                 )
                                 for result in approval_results:
                                     if isinstance(result, Exception):
@@ -313,14 +382,14 @@ async def poll_operations():
 
                 if is_finished:
                     log.info(
-                        f"[Poll Op {op_id}] Operation has finished. Removing from polling list."
+                        f"{LOG_PREFIX} [Poll Op {op_id}] Operation has finished. Removing from polling list."
                     )
                     polled_operation_ids.discard(op_id)
                     last_operation_states.pop(op_id, None)
 
             except Exception as poll_err:
                 log.error(
-                    f"[Poll Op {op_id}] Error during polling cycle: {poll_err}",
+                    f"{LOG_PREFIX} [Poll Op {op_id}] Error during polling cycle: {poll_err}",
                     exc_info=True,
                 )
 
@@ -339,18 +408,21 @@ async def handle_websocket(request: web.Request):
     ws = web.WebSocketResponse()
     can_prepare = ws.can_prepare(request)
     if not can_prepare:
-        logging.warning("Failed ws.can_prepare, cannot upgrade connection.")
+        logging.warning(
+            f"{LOG_PREFIX} Failed ws.can_prepare, cannot upgrade connection."
+        )
         return web.Response(status=400, text="Cannot upgrade connection to websocket.")
     try:
         await ws.prepare(request)
     except Exception as e:
         logging.error(
-            f"Websocket prepare error for {request.remote}: {e}", exc_info=True
+            f"{LOG_PREFIX} Websocket prepare error for {request.remote}: {e}",
+            exc_info=True,
         )
         return ws
 
     remote_addr = request.remote
-    logging.info(f"Websocket client connected: {remote_addr}")
+    logging.info(f"{LOG_PREFIX} Websocket client connected: {remote_addr}")
     connections.add(ws)
     ws_subscriptions = set()
 
@@ -359,7 +431,9 @@ async def handle_websocket(request: web.Request):
     app_svc: AppServiceInterface = plugin_services.get("app_svc")
 
     if not all([rest_svc, data_svc, app_svc]):
-        logging.error("Required services (rest_svc, data_svc, app_svc) not available.")
+        logging.error(
+            f"{LOG_PREFIX} Required services (rest_svc, data_svc, app_svc) not available."
+        )
         try:
             await ws.close(
                 code=aiohttp.WSCloseCode.INTERNAL_ERROR,
@@ -376,8 +450,10 @@ async def handle_websocket(request: web.Request):
             try:
                 polling_task.result()
             except Exception as e:
-                logging.error(f"Polling task ended unexpectedly: {e}", exc_info=True)
-        logging.info("Polling task not running. Starting...")
+                logging.error(
+                    f"{LOG_PREFIX} Polling task ended unexpectedly: {e}", exc_info=True
+                )
+        logging.info("{LOG_PREFIX} Polling task not running. Starting...")
         loop = asyncio.get_event_loop()
         polling_task = loop.create_task(poll_operations())
 
@@ -385,13 +461,15 @@ async def handle_websocket(request: web.Request):
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
                 logging.debug(
-                    f"Received websocket message from {remote_addr}: {msg.data}"
+                    f"{LOG_PREFIX} Received websocket message from {remote_addr}: {msg.data}"
                 )
-                response = {"status": "error", "message": "Unknown processing error"}
+                response: Response | None = None
                 try:
                     message_data = json.loads(msg.data)
                     action = message_data.get("action")
                     payload = message_data.get("data")
+                    req_id = message_data.get("request_id")
+
                     if not action:
                         raise ValueError("Missing 'action' field.")
 
@@ -404,35 +482,39 @@ async def handle_websocket(request: web.Request):
                             try:
                                 if payload.get("autonomous", True):
                                     logging.info(
-                                        "Creating operation with autonomous=True. Link approval requires autonomous=False."
+                                        f"{LOG_PREFIX} Creating operation with autonomous=True. Link approval requires autonomous=False."
                                     )
                                 if payload.get("manual_approval"):
                                     logging.warning(
-                                        "'manual_approval' flag requires core modifications."
+                                        f"{LOG_PREFIX} 'manual_approval' flag requires core modifications."
                                     )
                                 validated_data = CreateOperationData(**payload)
-                                create_payload = validated_data.model_dump(
-                                    exclude_unset=True
+                                operation_data_list = await create_caldera_operation(
+                                    rest_svc,
+                                    validated_data.model_dump(exclude_unset=True),
+                                    access_user="red",
                                 )
-                                op_data_list = await create_caldera_operation(
-                                    rest_svc, create_payload, access_user="red"
-                                )
-                                if op_data_list:
-                                    response = {
-                                        "status": "create_received",
-                                        "data": op_data_list,
-                                    }
+                                if operation_data_list:
+                                    response = Response(
+                                        status=OP_CREATED,
+                                        message="Operation creation request received.",
+                                        data={"operation_data": operation_data_list},
+                                        request_id=req_id,
+                                    )
+
                                 else:
-                                    response = {
-                                        "status": "error",
-                                        "message": "Failed to create operation.",
-                                    }
+                                    response = Response(
+                                        status=ERROR,
+                                        message="Failed to create operation.",
+                                        request_id=req_id,
+                                    )
+
                             except ValidationError as e:
-                                response = {
-                                    "status": "validation_error",
-                                    "message": "Invalid operation data.",
-                                    "details": e.errors(),
-                                }
+                                response = Response(
+                                    request_id=req_id,
+                                    status=ERROR,
+                                    message=f"Invalid operation data: {e}",
+                                )
 
                         case "start":
                             if payload is None or not isinstance(payload, dict):
@@ -441,7 +523,8 @@ async def handle_websocket(request: web.Request):
                             if not operation_id or not isinstance(operation_id, str):
                                 raise ValueError("Missing/invalid 'operation_id'")
                             ops = await data_svc.locate(
-                                "operations", match=dict(id=operation_id)
+                                "operations",
+                                match=dict(id=operation_id),
                             )
                             if not ops:
                                 raise ValueError(
@@ -449,35 +532,45 @@ async def handle_websocket(request: web.Request):
                                 )
                             if ops[0].autonomous:
                                 logging.warning(
-                                    f"Subscribing to autonomous op {operation_id}."
+                                    f"{LOG_PREFIX} Subscribing to autonomous op {operation_id}."
                                 )
-                            subscriptions[operation_id].add(ws)
+
+                            subscriptions[operation_id].add((ws, req_id))
                             ws_subscriptions.add(operation_id)
                             if not await ops[0].is_finished():
                                 polled_operation_ids.add(operation_id)
                                 last_operation_states.pop(operation_id, None)
                                 logging.info(
-                                    f"Client {remote_addr} subscribed to op {operation_id}. Added polling."
+                                    f"{LOG_PREFIX} Client {remote_addr} subscribed to op {operation_id}. Added polling."
                                 )
                             else:
                                 logging.info(
-                                    f"Client {remote_addr} subscribed to finished op {operation_id}. Not polling."
+                                    f"{LOG_PREFIX} Client {remote_addr} subscribed to finished op {operation_id}. Not polling."
                                 )
                             success = await start_caldera_operation(
-                                rest_svc, operation_id
+                                rest_svc,
+                                operation_id,
                             )
                             if success:
                                 poll_operations()
-                                response = {
-                                    "status": "Successfully started",
-                                    "operation_id": operation_id,
-                                }
+                                response = Response(
+                                    status=OP_STARTED,
+                                    message="Operation successfully started.",
+                                    data={
+                                        "operation_id": operation_id,
+                                    },
+                                    request_id=req_id,
+                                )
                             else:
                                 poll_operations()
-                                response = {
-                                    "status": "Operation failed to start",
-                                    "operation_id": operation_id,
-                                }
+                                response = Response(
+                                    status=ERROR,
+                                    data={
+                                        "operation_id": operation_id,
+                                    },
+                                    message="Failed to start operation.",
+                                    request_id=req_id,
+                                )
 
                         case "stop_operation":
                             if payload is None or not isinstance(payload, dict):
@@ -491,15 +584,23 @@ async def handle_websocket(request: web.Request):
                                 rest_svc, operation_id
                             )
                             if success:
-                                response = {
-                                    "status": "stop_received",
-                                    "operation_id": operation_id,
-                                }
+                                response = Response(
+                                    status=OP_STOPPED,
+                                    message="Operation stop request received.",
+                                    data={
+                                        "operation_id": operation_id,
+                                    },
+                                    request_id=req_id,
+                                )
                             else:
-                                response = {
-                                    "status": "error",
-                                    "message": f"Failed stop request for {operation_id}.",
-                                }
+                                response = Response(
+                                    status=ERROR,
+                                    message="Failed to stop operation",
+                                    data={
+                                        "operation_id": operation_id,
+                                    },
+                                    request_id=req_id,
+                                )
 
                         case "unsubscribe":
                             if payload is None or not isinstance(payload, dict):
@@ -516,23 +617,28 @@ async def handle_websocket(request: web.Request):
                                     polled_operation_ids.discard(operation_id)
                                     last_operation_states.pop(operation_id, None)
                                     logging.info(
-                                        f"Removed {operation_id} from polling - no subscribers."
+                                        f"{LOG_PREFIX} Removed {operation_id} from polling - no subscribers."
                                     )
                             ws_subscriptions.discard(operation_id)
                             logging.info(
-                                f"Client {remote_addr} unsubscribed from op {operation_id}"
+                                f"{LOG_PREFIX} Client {remote_addr} unsubscribed from op {operation_id}"
                             )
                             poll_operations()
-                            response = {
-                                "status": "unsubscribed",
-                                "operation_id": operation_id,
-                            }
+                            response = Response(
+                                status=OP_UNSUBSCRIBED,
+                                data={
+                                    "operation_id": operation_id,
+                                },
+                                request_id=req_id,
+                                message="Unsubscribed from operation.",
+                            )
 
                         case "approve_link":
                             if payload is None or not isinstance(payload, dict):
                                 raise ValueError(
                                     "Missing/invalid 'data' for approve_link"
                                 )
+
                             link_id = payload.get("link_id")
                             decision = payload.get("decision")
                             if not link_id or not isinstance(link_id, str):
@@ -546,63 +652,101 @@ async def handle_websocket(request: web.Request):
                                 raise ValueError(f"Link '{link_id}' not found.")
 
                             new_status = -99  # Use distinct invalid status
-                            log_msg = ""
                             if decision == "approve":
                                 new_status = LINK_EXECUTE_STATUS
-                                log_msg = f"Approved link {link_id} (set status to {new_status})."
+                                logging.info(
+                                    f"{LOG_PREFIX} Approved link {link_id} (set status to {new_status})."
+                                )
+                                response = Response(
+                                    request_id=req_id,
+                                    status=OP_LINK_APPROVED,
+                                    message="Link decision was approved.",
+                                    data={
+                                        "link_id": link_id,
+                                        "decision": decision,
+                                    },
+                                )
 
                             elif decision == "discard":
                                 new_status = LINK_DISCARD_STATUS
-                                log_msg = f"Discarded link {link_id} (set status to {new_status})."
+                                logging.info(
+                                    f"{LOG_PREFIX} Discarded link {link_id} (set status to {new_status})."
+                                )
+                                response = Response(
+                                    request_id=req_id,
+                                    status=OP_LINK_DISCARDED,
+                                    message="Link decision was discarded.",
+                                    data={
+                                        "link_id": link_id,
+                                        "decision": decision,
+                                    },
+                                )
 
                             link.status = new_status
-                            logging.info(log_msg)
                             poll_operations()
-                            response = {
-                                "status": "link_decision_processed",
-                                "link_id": link_id,
-                                "decision": decision,
-                            }
+
                         case _:
-                            response = {
-                                "status": "error",
-                                "message": f"Action '{action}' not recognized.",
-                            }
+                            response = Response(
+                                status=ERROR,
+                                message=f"Action '{action}' not recognized.",
+                                request_id=req_id,
+                            )
 
                 except json.JSONDecodeError:
-                    response = {"status": "error", "message": "Invalid JSON format"}
-                    logging.warning(f"Invalid JSON: {msg.data}")
+                    response = Response(
+                        status=ERROR,
+                        message="Invalid JSON format",
+                        request_id=req_id,
+                    )
+                    logging.warning(f"{LOG_PREFIX} Invalid JSON: {msg.data}")
+
                 except ValueError as e:
-                    response = {"status": "error", "message": str(e)}
-                    logging.warning(f"Value error: {e}")
+                    response = Response(
+                        status=ERROR,
+                        message=str(e),
+                        request_id=req_id,
+                    )
+                    logging.warning(f"{LOG_PREFIX} Value error: {e}")
+
                 except Exception as e:
-                    response = {
-                        "status": "error",
-                        "message": f"Internal error: {type(e).__name__}",
-                    }
-                    logging.error(f"Processing error: {e}", exc_info=True)
+                    response = Response(
+                        status=ERROR,
+                        message=f"Internal error: {type(e).__name__}",
+                        request_id=req_id,
+                    )
+
+                    logging.error(f"{LOG_PREFIX} Processing error: {e}", exc_info=True)
                 if not ws.closed:
                     try:
+                        logging.info(f"{LOG_PREFIX} Sending response to {remote_addr}")
                         await ws.send_str(
-                            json.dumps(response, default=json_serializable_converter)
+                            json.dumps(
+                                response,
+                                default=json_serializable_converter,
+                            )
                         )
                     except Exception as send_err:
-                        logging.error(f"Send error: {send_err}", exc_info=True)
+                        logging.error(
+                            f"{LOG_PREFIX} Send error: {send_err}", exc_info=True
+                        )
                         break
 
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                logging.error(f"WS error: {ws.exception()}")
+                logging.error(f"{LOG_PREFIX} WS error: {ws.exception()}")
                 break
             elif msg.type == aiohttp.WSMsgType.CLOSED:
-                logging.info(f"WS closed by client {remote_addr}")
+                logging.info(f"{LOG_PREFIX} WS closed by client {remote_addr}")
                 break
 
     except asyncio.CancelledError:
-        logging.info(f"WS handler cancelled for {remote_addr}.")
+        logging.info(f"{LOG_PREFIX} WS handler cancelled for {remote_addr}.")
     except Exception as e:
-        logging.error(f"Exception in WS handler loop {remote_addr}: {e}", exc_info=True)
+        logging.error(
+            f"{LOG_PREFIX} Exception in WS handler loop {remote_addr}: {e}",
+            exc_info=True,
+        )
     finally:
-        logging.info(f"Cleaning up connection: {remote_addr}")
+        logging.info(f"{LOG_PREFIX} Cleaning up connection: {remote_addr}")
         connections.discard(ws)
         for op_id in list(ws_subscriptions):
             if op_id in subscriptions:
@@ -612,16 +756,17 @@ async def handle_websocket(request: web.Request):
                     polled_operation_ids.discard(op_id)
                     last_operation_states.pop(op_id, None)
                     logging.info(
-                        f"Stopped polling op {op_id} - last subscriber disconnected."
+                        f"{LOG_PREFIX} Stopped polling op {op_id} - last subscriber disconnected."
                     )
         logging.info(
-            f"Client {remote_addr} removed. Subs: {len(subscriptions)}, Polled: {len(polled_operation_ids)}"
+            f"{LOG_PREFIX} Client {remote_addr} removed. Subs: {len(subscriptions)}, Polled: {len(polled_operation_ids)}"
         )
     return ws
 
 
 async def start_caldera_operation(
-    rest_svc: RestServiceInterface, operation_id: str
+    rest_svc: RestServiceInterface,
+    operation_id: str,
 ) -> bool:
     """Wrapper function that starts a caldera operation using the REST service API.
 
@@ -634,18 +779,23 @@ async def start_caldera_operation(
         bool: True if the operation was started successfully, False otherwise.
     """
 
-    logging.info(f"Attempting to start operation {operation_id} via API")
+    logging.info(f"[WS PLUGIN] Attempting to start operation {operation_id} via API")
     try:
         await rest_svc.update_operation(operation_id, state="running")
-        logging.info(f"Sent request to set op {operation_id} state to 'running'.")
+        logging.info(
+            f"{LOG_PREFIX} Sent request to set operation {operation_id} state to 'running'."
+        )
         return True
     except Exception as e:
-        logging.error(f"Error starting op {operation_id}: {e}", exc_info=True)
+        logging.error(
+            f"{LOG_PREFIX} Error starting operation {operation_id}: {e}", exc_info=True
+        )
         return False
 
 
 async def stop_caldera_operation(
-    rest_svc: RestServiceInterface, operation_id: str
+    rest_svc: RestServiceInterface,
+    operation_id: str,
 ) -> bool:
     """Wrapper function that stops a caldera operation using the REST service API.
 
@@ -662,15 +812,21 @@ async def stop_caldera_operation(
     logging.info(f"Attempting to stop operation {operation_id} via API")
     try:
         await rest_svc.update_operation(operation_id, state="finished")
-        logging.info(f"Sent request to set op {operation_id} state to 'finished'.")
+        logging.info(
+            f"{LOG_PREFIX} Sent request to set op {operation_id} state to 'finished'."
+        )
         return True
     except Exception as e:
-        logging.error(f"Error stopping op {operation_id}: {e}", exc_info=True)
+        logging.error(
+            f"{LOG_PREFIX} Error stopping op {operation_id}: {e}", exc_info=True
+        )
         return False
 
 
 async def create_caldera_operation(
-    rest_svc: RestServiceInterface, data: dict, access_user: str = "red"
+    rest_svc: RestServiceInterface,
+    data: dict,
+    access_user: str = "red",
 ) -> list | None:
     """Wrapper function that creates a caldera operation using the REST service API.
 
@@ -686,19 +842,27 @@ async def create_caldera_operation(
 
     """
 
-    logging.info("Attempting to create operation via API with data")
-    logging.debug(f"Data dictionary for creation: {data}")
+    logging.info(f"{LOG_PREFIX} Attempting to create operation via API")
+    logging.debug(f"{LOG_PREFIX} Data dictionary for creation: {data}")
     try:
         access_payload = {"access": [access_user]}
-        op_data_list = await rest_svc.create_operation(access=access_payload, data=data)
-        logging.info(f"Operation creation API call returned: {op_data_list}")
+        op_data_list = await rest_svc.create_operation(
+            access=access_payload,
+            data=data,
+        )
+        logging.debug(
+            f"{LOG_PREFIX} Operation creation API call returned: {op_data_list}"
+        )
         if op_data_list and isinstance(op_data_list, list) and len(op_data_list) > 0:
+            logging.info(f"{LOG_PREFIX} Successfully created operation")
             return op_data_list
         else:
-            logging.error(f"Unexpected response from create_operation: {op_data_list}")
+            logging.error(
+                f"{LOG_PREFIX} Unexpected response from create_operation: {op_data_list}"
+            )
             return None
     except Exception as e:
-        logging.error(f"Error creating operation: {e}", exc_info=True)
+        logging.error(f"{LOG_PREFIX} Error creating operation: {e}", exc_info=True)
         return None
 
 
@@ -721,44 +885,52 @@ async def enable(services: dict):
             for n, s in [("app", app_svc), ("rest", rest_svc), ("data", data_svc)]
             if not s
         ]
-        logging.error(f"WebsocketReporter missing services: {', '.join(missing)}")
+        logging.error(
+            f"{LOG_PREFIX} WebsocketReporter missing services: {', '.join(missing)}"
+        )
         plugin_services.clear()
         return
     plugin_services["app_svc"] = app_svc
     app = app_svc.application
     try:
         app.router.add_route("GET", address, handle_websocket)
-        logging.info(f"Websocket reporter endpoint enabled at {address}")
+        logging.info(f"{LOG_PREFIX} Websocket reporter endpoint enabled at {address}")
     except Exception as e:
-        logging.error(f"Failed to add websocket route {address}: {e}", exc_info=True)
+        logging.error(
+            f"{LOG_PREFIX} Failed to add websocket route {address}: {e}", exc_info=True
+        )
         return
     if polling_task is None or polling_task.done():
-        logging.info("Starting background polling task...")
+        logging.info(f"{LOG_PREFIX} Starting background polling task...")
         loop = asyncio.get_event_loop()
         polling_task = loop.create_task(poll_operations())
     else:
-        logging.info("Polling task already running.")
+        logging.info(f"{LOG_PREFIX} Polling task already running.")
 
 
 async def disable(services):
     global polling_task
-    logging.info("Disabling websocket reporter plugin.")
+    logging.info(f"{LOG_PREFIX} Disabling websocket reporter plugin.")
     if polling_task and not polling_task.done():
-        logging.info("Cancelling background polling task...")
+        logging.info(f"{LOG_PREFIX} Cancelling background polling task...")
         polling_task.cancel()
         try:
             await polling_task
         except asyncio.CancelledError:
-            logging.info("Polling task cancelled.")
+            logging.info(f"{LOG_PREFIX} Polling task cancelled.")
         except Exception as e:
-            logging.error(f"Error cancelling polling task: {e}", exc_info=True)
+            logging.error(
+                f"{LOG_PREFIX} Error cancelling polling task: {e}", exc_info=True
+            )
     polling_task = None
     polled_operation_ids.clear()
     last_operation_states.clear()
     logging.info("Polling task stopped and state cleared.")
     active_connections = list(connections)
     if active_connections:
-        logging.info(f"Closing {len(active_connections)} websocket connections.")
+        logging.info(
+            f"{LOG_PREFIX} Closing {len(active_connections)} websocket connections."
+        )
         tasks = [
             ws.close(code=aiohttp.WSCloseCode.GOING_AWAY, message="Server shutdown")
             for ws in active_connections
@@ -766,5 +938,5 @@ async def disable(services):
         await asyncio.gather(*tasks, return_exceptions=True)
     connections.clear()
     subscriptions.clear()
-    logging.info("Websocket connections closed and subscriptions cleared.")
+    logging.info("{LOG_PREFIX} Websocket connections closed and subscriptions cleared.")
     plugin_services.clear()

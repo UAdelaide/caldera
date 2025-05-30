@@ -17,6 +17,8 @@ services:
       args:
         TZ: "UTC" 
         WIN_BUILD: "true"
+    restart: unless-stopped
+    container_name: caldera
     environment:
       PUID: 1000
       PGID: 1000
@@ -32,4 +34,4 @@ services:
       - "2222:2222"
     volumes:
       - ./:/usr/src/app
-    command: --log DEBUG
+    command: --log INFO
