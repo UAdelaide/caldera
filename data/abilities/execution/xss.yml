@@ -6,7 +6,7 @@
   executors:
   - name: sh
     platform: linux
-    command: 'curl -i "http://localhost:#{host.port.8082}/test2#%3Cimg%20src%3D1%20onerror%3Dalert(1)%3E";
+    command: 'curl -i "http://192.168.32.33:#{host.port.30082}/test2#%3Cimg%20src%3D1%20onerror%3Dalert(1)%3E";
 
       '
     code: null
@@ -22,7 +22,7 @@
   requirements:
   - module: plugins.stockpile.app.requirements.paw_provenance
     relationship_match:
-    - source: host.port.8082
+    - source: host.port.30082
       edge: ''
       target: ''
   privilege: ''

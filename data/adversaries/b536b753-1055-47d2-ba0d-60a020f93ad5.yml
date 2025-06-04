@@ -1,4 +1,6 @@
-name: NGINX Adversary
+---
+name: NGINX Adversary 2
+id: b536b753-1055-47d2-ba0d-60a020f93ad5
 description:
   Able to perform nmap scan, identify different nginx vulnerabilities,
   and exploit them.

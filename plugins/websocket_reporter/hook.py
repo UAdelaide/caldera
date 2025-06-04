@@ -21,6 +21,7 @@ OP_CREATED = "operation_created"
 OP_STARTED = "operation_started"
 OP_UPDATED = "operation_updated"
 OP_STOPPED = "operation_stopped"
+OP_DELETED = "operation_deleted"
 OP_SUBSCRIBED = "operation_subscribed"
 OP_UNSUBSCRIBED = "operation_unsubscribed"
 OP_LINK_PENDING = "operation_link_pending"
@@ -344,7 +345,11 @@ async def poll_operations():
 
                                         approval_payload = Response(
                                             status=OP_LINK_PENDING,
-                                            data=new_link.display,
+                                            data={
+                                                "operation_id": op_id,
+                                                "link_id": link_id,
+                                                "link_data": new_link.display,
+                                            },
                                         )
                                         try:
                                             for ws, req_id in subscribers:
@@ -474,6 +479,37 @@ async def handle_websocket(request: web.Request):
                         raise ValueError("Missing 'action' field.")
 
                     match action:
+                        case "delete_operation":
+                            if payload is None or not isinstance(payload, dict):
+                                raise ValueError("Missing/invalid 'data' for start")
+                            operation_id = payload.get("operation_id")
+                            if not operation_id or not isinstance(operation_id, str):
+                                raise ValueError("Missing/invalid 'operation_id'")
+                            ops = await data_svc.locate(
+                                "operations",
+                                match=dict(id=operation_id),
+                            )
+                            if not ops:
+                                raise ValueError(
+                                    f"Operation '{operation_id}' not found."
+                                )
+                            delete_data = await delete_caldera_operation(
+                                rest_svc,
+                                operation_id,
+                            )
+                            logging.info(
+                                f"{LOG_PREFIX} Delete operation data: {delete_data}"
+                            )
+                            response = Response(
+                                status=OP_DELETED,
+                                message="Operation deletion request received.",
+                                data={
+                                    "operation_id": operation_id,
+                                    "delete_data": delete_data,
+                                },
+                                request_id=req_id,
+                            )
+
                         case "create_operation":
                             if payload is None or not isinstance(payload, dict):
                                 raise ValueError(
@@ -488,6 +524,9 @@ async def handle_websocket(request: web.Request):
                                     logging.warning(
                                         f"{LOG_PREFIX} 'manual_approval' flag requires core modifications."
                                     )
+                                logging.info(
+                                    f"{LOG_PREFIX} Creating operation with payload: {payload} with request_id {req_id}"
+                                )
                                 validated_data = CreateOperationData(**payload)
                                 operation_data_list = await create_caldera_operation(
                                     rest_svc,
@@ -719,11 +758,14 @@ async def handle_websocket(request: web.Request):
                 if not ws.closed:
                     try:
                         logging.info(f"{LOG_PREFIX} Sending response to {remote_addr}")
-                        await ws.send_str(
+                        msg = await ws.send_str(
                             json.dumps(
                                 response,
                                 default=json_serializable_converter,
                             )
+                        )
+                        logging.info(
+                            f"{LOG_PREFIX} Sent response to {remote_addr}: {msg}"
                         )
                     except Exception as send_err:
                         logging.error(
@@ -864,6 +906,35 @@ async def create_caldera_operation(
     except Exception as e:
         logging.error(f"{LOG_PREFIX} Error creating operation: {e}", exc_info=True)
         return None
+
+
+async def delete_caldera_operation(
+    rest_svc: RestServiceInterface,
+    operation_id: str,
+) -> list | None:
+    """Wrapper function that creates a caldera operation using the REST service API.
+
+    Parameters
+    ----------
+        rest_svc: The REST service interface to use for the operation.
+        data: The data dictionary for the operation to create.
+        access_user: The user to set access for the operation.
+
+    Returns
+    -------
+        list | None: The created operation data if successful, None otherwise.
+
+    """
+
+    logging.info(f"{LOG_PREFIX} Attempting to delete operation via API")
+    logging.debug(f"{LOG_PREFIX} Data dictionary for delete: {operation_id}")
+
+    op_data = await rest_svc.delete_operation(
+        data={
+            "id": operation_id,
+        },
+    )
+    logging.debug(f"{LOG_PREFIX} Operation delete API call returned: {op_data}")
 
 
 async def enable(services: dict):

@@ -4,40 +4,36 @@
   name: Run NMAP scan
   description: Scan a host for open ports and services
   executors:
-    - name: sh
-      platform: linux
-      command: |
-        nmap #{remote.host.ip}
-      code: null
-      language: null
-      build_target: null
-      payloads: []
-      uploads: []
-      timeout: 300
-      parsers:
-        - module: app.parsers.nmap
-          parserconfigs:
-            - source: host.ports
-              edge:
-              target:
-              custom_parser_vals: {}
-      cleanup: []
-      variations: []
-      additional_info:
-        ability_id: 6f79e552-7788-46a0-92c7-a9f78678ce17
-  requirements:
-    - module: plugins.stockpile.app.requirements.basic
-      relationship_match:
-        - source: remote.host.ip
-          edge:
-          target:
-  privilege: ""
+  - name: sh
+    platform: linux
+    command: 'nmap 192.168.32.33 -p-
+
+      '
+    code: null
+    language: null
+    build_target: null
+    payloads: []
+    uploads: []
+    timeout: 300
+    parsers:
+    - module: app.parsers.nmap
+      parserconfigs:
+      - source: host.ports
+        edge: ''
+        target: ''
+        custom_parser_vals: {}
+    cleanup: []
+    variations: []
+    additional_info:
+      ability_id: 6f79e552-7788-46a0-92c7-a9f78678ce17
+  requirements: []
+  privilege: ''
   repeatable: false
   buckets:
-    - technical-information-gathering
+  - technical-information-gathering
   additional_info: {}
   access: {}
   singleton: false
-  plugin: ""
+  plugin: ''
   delete_payload: true
   id: nmap-scan

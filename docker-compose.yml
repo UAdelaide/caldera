@@ -1,16 +1,20 @@
 version: "3"
 
 services:
-  agent:
-    image: attacker
-    container_name: attacker
-    build:
-      context: ../CyberLab/containers/caldera_agent/
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    env_file: ../CyberLab/containers/caldera_agent/.env
-    network_mode: host
-  caldera:
+  # caldera_agent:
+  #   container_name: caldera_agent
+  #   image: ghcr.io/uadelaide/caldera_agent:latest
+  #   depends_on:
+  #     - caldera_server
+  #   restart: unless-stopped
+  #   environment:
+  #     TZ: "Australia/Adelaide"
+  #     CALDERA_SERVER: "http://localhost:8888/weather"
+  #     RL_AGENT_URL: "http://192.168.32.33:30902/api/attacker"
+  #     LOG_LEVEL: "INFO"
+  #   network_mode: host
+  caldera_server:
+    container_name: caldera_server
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,7 +22,6 @@ services:
         TZ: "UTC" 
         WIN_BUILD: "true"
     restart: unless-stopped
-    container_name: caldera
     environment:
       PUID: 1000
       PGID: 1000
