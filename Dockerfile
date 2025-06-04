@@ -1,4 +1,4 @@
-# docker build . -t gchr.io/uadelaide/caldera_server:latest 
+# docker build . -t ghcr.io/uadelaide/caldera_server:latest 
 # docker push ghcr.io/uadelaide/caldera_server:latest
 
 FROM ubuntu:24.04
