@@ -1,0 +1,7 @@
+name: GOAT
+description: An adversary that targets Kubernetes GOAT vulnerabilities.
+atomic_ordering:
+- 2871e8cc-7ff7-4d1e-ae20-36832db8d9d7
+- bcabfef9-432d-4d55-8e4f-74307d60bb72
+adversary_id: goat-adversary
+objective: 495a9828-cab1-44dd-a0ca-66e58177d8cc

@@ -1,0 +1,76 @@
+- tactic: discovery
+  technique_name: Automated Exfiltration
+  technique_id: T1046
+  name: Crawl filesystem via SSRF
+  description: Crawls filesystem via SSRF vuln to find sensitive files.
+  executors:
+  - name: sh
+    platform: linux
+    command: URL=http://#{target_ip}/ ./crawl.sh
+    code: null
+    language: null
+    build_target: null
+    payloads:
+    - crawl.sh
+    uploads: []
+    timeout: 60
+    parsers:
+    - module: plugins.stockpile.app.parsers.json
+      parserconfigs:
+      - source: flag
+        edge: ''
+        target: ''
+        custom_parser_vals:
+          json_key: flag
+          json_type: str
+    - module: plugins.stockpile.app.parsers.json
+      parserconfigs:
+      - source: success
+        edge: ''
+        target: ''
+        custom_parser_vals:
+          json_key: success
+          json_type: str
+    - module: plugins.stockpile.app.parsers.json
+      parserconfigs:
+      - source: cve_id
+        edge: ''
+        target: ''
+        custom_parser_vals:
+          json_key: cve_id
+          json_type: str
+    - module: plugins.stockpile.app.parsers.json
+      parserconfigs:
+      - source: timestamp
+        edge: ''
+        target: ''
+        custom_parser_vals:
+          json_key: timestamp
+          json_type: str
+    - module: plugins.stockpile.app.parsers.json
+      parserconfigs:
+      - source: exploitation_difficulty
+        edge: ''
+        target: ''
+        custom_parser_vals:
+          json_key: exploitation_difficulty
+          json_type: str
+    cleanup: []
+    variations: []
+    additional_info: {}
+  requirements:
+  - module: plugins.stockpile.app.requirements.paw_provenance
+    relationship_match:
+    - source: target_ip
+      edge: ''
+      target: ''
+  privilege: ''
+  repeatable: false
+  buckets:
+  - discovery
+  additional_info: {}
+  access: {}
+  singleton: false
+  plugin: ''
+  delete_payload: true
+  id: bcabfef9-432d-4d55-8e4f-74307d60bb72
