@@ -22,7 +22,7 @@ data/object_store
 data/fact_store
 data/results/*
 !data/results/.gitkeep
-data/payloads/*
+
 !data/payloads/.gitkeep
 data/facts/*yml
 !data/facts/.gitkeep
